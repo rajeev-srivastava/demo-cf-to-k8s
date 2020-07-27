@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<TITLE>CloudFoundry migration tool</TITLE>
+</HEAD>
+<BODY>
+<H1>Migration run result</H1>
+<P>This migration tool is run against the application <B>smp-hello-world</B> of type <B>ibm-websphere-liberty</B>.</P>
+<P>The tool is run at Thu Jun 11 15:16:13 UTC 2020..</P>
+<H2>Generated files</H2>
+<P>These are the files that are stored in <B>/data/cfliberty1/hello-world/defaultServer</B>. Some of these files may have to be modified manually as listed below:</P>
+<UL>
+<LI>runtime-vars.xml: environment variables for WebSphere Liberty</LI><LI>server.xml: WebSphere Liberty main configuration file</LI><LI>Dockerfile: files for creating Docker image for your application</LI><LI>deploy-kube/deploy-kube.yaml: Definitions for deploying your application to IKS</LI><LI>deploy-openshift/deploy-template.yaml: Definitions for deploying your application to OpenShift</LI>
+</UL>
+<H2>Deploying application to iks</H2>
+<P>Perform the following actions:</P>
+<OL>
+<LI>You can setup environtment variables to make it easy to run the commands listed here:
+<UL>
+<LI>The docker image repository host (and port) that you will use such as docker.io for DockerHub, or <region>.icr.io or other repository hosts.  <XMP>export REPOHOST=docker.io</XMP>
+<LI>The namespace that you will store this image to. <XMP>export REPOSPACE=mynamespace</XMP>
+<LI>The IBM Kubernetes server cluster name. <XMP>export CLUSTER=mycluster</XMP>
+</UL>
+<LI>Go to the conversion path directory <XMP>cd /data/cfliberty1/hello-world/defaultServer</XMP>
+<LI>Generate the docker image:<XMP>docker build -t smp-hello-world .</XMP>
+<LI>Tag the docker image for a docker repository that is accessible to the cluster.<XMP>docker tag smp-hello-world ${REPOHOST}/${REPOSPACE}/smp-hello-world</XMP>
+<LI>Store the docker image into a docker repository that is accessible to the cluster.<XMP>docker login ${REPOHOST}</XMP> <XMP>docker push ${REPOHOST}/${REPOSPACE}/smp-hello-world</XMP>
+<LI>Login to IBM Cloud
+<XMP>ibmcloud login </XMP>
+<XMP>`ibmcloud ks cluster-config ${CLUSTER} | grep KUBECONFIG`</XMP>
+<LI>Create objects for kubernetes
+<XMP>export REGION=$(ibmcloud target | grep "Region" | awk '{print $2}')</XMP>
+<XMP>cat deploy-kube/deploy-kube.yaml | sed -e "s/\${TARGET_REPO}/$REPOHOST/g" -e "s/\${TARGET_WORKSPACE}/$REPOSPACE/g" -e "s/\${INGRESS}/smp-hello-world.$CLUSTER.$REGION.containers.appdomain.cloud/g" > deploy-kube/deploy.yaml</XMP>
+<XMP>kubectl apply -f deploy-kube/deploy.yaml</XMP>
+<LI>Application can be accessed through the ingress entry or the NodePort service that you create
+<UL><LI>To get the nodePort service information, use the commands:<XMP>ibmcloud ks workers --cluster ${CLUSTER}</XMP>and<XMP>kubectl get service smp-hello-world-service</XMP><LI>To get the ingress endpoint, use the hostname of: <XMP>smp-hello-world.${CLUSTER}.${REGION}.containers.appdomain.cloud</XMP>
+</OL>
+</BODY>
+</HTML>

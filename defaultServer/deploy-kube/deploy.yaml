@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smp-hello-world-deployment
+spec:
+  replicas: 1
+  selector:
+   matchLabels:
+    app: smp-hello-world
+  template:
+    metadata:
+      name: pod-smp-hello-world
+      labels:
+        app: smp-hello-world
+    spec:
+      containers:
+        - name: smp-hello-world
+          image: "docker.io/rajeev123/smp-hello-world:latest"
+          imagePullPolicy: Always
+          env:
+          - name: VCAP_SERVICES
+            valueFrom:
+              secretKeyRef:
+                name: smp-hello-world-vcap-services
+                key: vcap
+          livenessProbe:
+            tcpSocket:
+              port: 9080
+            initialDelaySeconds: 20
+            periodSeconds: 60
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: smp-hello-world
+  name: smp-hello-world-vcap-services
+type: Opaque
+data:
+  vcap: ICB7CiAgInVzZXItcHJvdmlkZWQiOiBbCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkzIjogIlNpciIKICAgIH0sCiAgICAiaW5zdGFuY2VfbmFtZSI6ICJ1cHMzIiwKICAgICJsYWJlbCI6ICJ1c2VyLXByb3ZpZGVkIiwKICAgICJuYW1lIjogInVwczMiLAogICAgInN5c2xvZ19kcmFpbl91cmwiOiAiIiwKICAgICJ0YWdzIjogW10sCiAgICAidm9sdW1lX21vdW50cyI6IFtdCiAgIH0sCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkyIjogIlJhbmphbiIKICAgIH0sCiAgICAiaW5zdGFuY2VfbmFtZSI6ICJ1cHMyIiwKICAgICJsYWJlbCI6ICJ1c2VyLXByb3ZpZGVkIiwKICAgICJuYW1lIjogInVwczIiLAogICAgInN5c2xvZ19kcmFpbl91cmwiOiAiIiwKICAgICJ0YWdzIjogW10sCiAgICAidm9sdW1lX21vdW50cyI6IFtdCiAgIH0sCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkxIjogIlJhamVldiAiCiAgICB9LAogICAgImluc3RhbmNlX25hbWUiOiAidXBzMSIsCiAgICAibGFiZWwiOiAidXNlci1wcm92aWRlZCIsCiAgICAibmFtZSI6ICJ1cHMxIiwKICAgICJzeXNsb2dfZHJhaW5fdXJsIjogIiIsCiAgICAidGFncyI6IFtdLAogICAgInZvbHVtZV9tb3VudHMiOiBbXQogICB9CiAgXQogfQo=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smp-hello-world-service
+  labels:
+    app: smp-hello-world
+spec:
+  type: NodePort
+  selector:
+    app: smp-hello-world
+  ports:
+   - protocol: TCP
+     port: 9080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: smp-hello-world-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: smp-hello-world.mycluster.us-south.containers.appdomain.cloud
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: smp-hello-world-service
+          servicePort: 9080

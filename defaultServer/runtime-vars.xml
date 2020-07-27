@@ -1,0 +1,14 @@
+<server>
+  <variable name='cloud.services.ups3.name' value='ups3'/>
+  <variable name='cloud.services.ups3.instance_name' value='ups3'/>
+  <variable name='cloud.services.ups3.label' value='user-provided'/>
+  <variable name='cloud.services.ups3.connection.key3' value='Sir'/>
+  <variable name='cloud.services.ups2.name' value='ups2'/>
+  <variable name='cloud.services.ups2.instance_name' value='ups2'/>
+  <variable name='cloud.services.ups2.label' value='user-provided'/>
+  <variable name='cloud.services.ups2.connection.key2' value='Ranjan'/>
+  <variable name='cloud.services.ups1.name' value='ups1'/>
+  <variable name='cloud.services.ups1.instance_name' value='ups1'/>
+  <variable name='cloud.services.ups1.label' value='user-provided'/>
+  <variable name='cloud.services.ups1.connection.key1' value='Rajeev '/>
+</server>

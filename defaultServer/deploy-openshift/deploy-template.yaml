@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: dc-smp-hello-world-template
+  annotations:
+    description: smp-hello-world-openshift
+    tags: smp-hello-world
+objects:
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      creationTimestamp: null
+      generation: 1
+      labels:
+        app: smp-hello-world
+        deploymentconfig: smp-hello-world
+      name: smp-hello-world
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        app: smp-hello-world
+        deploymentconfig: smp-hello-world
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: smp-hello-world
+            deploymentconfig: smp-hello-world
+        spec:
+          containers:
+            - image: docker.io/rajeev123/smp-hello-world:latest
+              imagePullPolicy: Always
+              name: smp-hello-world
+              ports:
+                - containerPort: 9080
+                  protocol: TCP
+              resources: {}
+              env:
+              - name: VCAP_SERVICES
+                valueFrom:
+                  secretKeyRef:
+                    name: smp-hello-world-vcap-services
+                    key: vcap
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              volumeMounts:
+                - mountPath: /opt/ibm/wlp/output
+                  name: liberty-output
+          volumes:
+            - name: liberty-output
+              emptydir: {}
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+      test: false
+      triggers:
+        - type: ConfigChange
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      labels:
+        app: smp-hello-world
+      name: smp-hello-world-vcap-services
+    type: Opaque
+    data:
+      vcap: ICB7CiAgInVzZXItcHJvdmlkZWQiOiBbCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkzIjogIlNpciIKICAgIH0sCiAgICAiaW5zdGFuY2VfbmFtZSI6ICJ1cHMzIiwKICAgICJsYWJlbCI6ICJ1c2VyLXByb3ZpZGVkIiwKICAgICJuYW1lIjogInVwczMiLAogICAgInN5c2xvZ19kcmFpbl91cmwiOiAiIiwKICAgICJ0YWdzIjogW10sCiAgICAidm9sdW1lX21vdW50cyI6IFtdCiAgIH0sCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkyIjogIlJhbmphbiIKICAgIH0sCiAgICAiaW5zdGFuY2VfbmFtZSI6ICJ1cHMyIiwKICAgICJsYWJlbCI6ICJ1c2VyLXByb3ZpZGVkIiwKICAgICJuYW1lIjogInVwczIiLAogICAgInN5c2xvZ19kcmFpbl91cmwiOiAiIiwKICAgICJ0YWdzIjogW10sCiAgICAidm9sdW1lX21vdW50cyI6IFtdCiAgIH0sCiAgIHsKICAgICJiaW5kaW5nX25hbWUiOiBudWxsLAogICAgImNyZWRlbnRpYWxzIjogewogICAgICJrZXkxIjogIlJhamVldiAiCiAgICB9LAogICAgImluc3RhbmNlX25hbWUiOiAidXBzMSIsCiAgICAibGFiZWwiOiAidXNlci1wcm92aWRlZCIsCiAgICAibmFtZSI6ICJ1cHMxIiwKICAgICJzeXNsb2dfZHJhaW5fdXJsIjogIiIsCiAgICAidGFncyI6IFtdLAogICAgInZvbHVtZV9tb3VudHMiOiBbXQogICB9CiAgXQogfQo=
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      creationTimestamp: null
+      labels:
+        app: smp-hello-world
+      name: smp-hello-world
+    spec:
+      ports:
+        - name: 9080-tcp
+          port: 9080
+          protocol: TCP
+          targetPort: 9080
+      selector:
+        app: smp-hello-world
+      sessionAffinity: None
+      type: ClusterIP
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      labels:
+        app: smp-hello-world
+      name: smp-hello-world
+    spec:
+      port:
+        targetPort: 9080-tcp
+      to:
+        kind: Service
+        name: smp-hello-world
+        weight: 100
+      wildcardPolicy: None
+      tls:
+        termination: edge
+
